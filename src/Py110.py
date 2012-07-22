@@ -47,13 +47,9 @@ class Py110(object):
         #Clears all text from the console (retaining background image)
         self.display.clear()
         pass
-    def clearBack(self) :
-        #TODO:
-        #Clears the background image for the console (retaining text)
-        pass
-    def clearBack( self, x,  y,  width,  height) :
+    def clearBack( self, rectangle=None) :
         #TODO:        
-        #Clears a rectangular portion of the background image
+        #Clears a rectangular portion of the background image. Rectangle is a tuple of (x,y,width,height).  If the rectangle is None, clear all of the background.
         pass
     def clearChar(self) :
         #Clears the character at the current cursor position
@@ -128,13 +124,18 @@ class Py110(object):
     def setPosition(self, x, y) :
         #TODO:        
         #Sets the cursor position (in character spaces, not pixels)
-        pass
+        #Doing it the lazy way:
+        oldPos=self.display.cursor
+        while (x,y)!=self.display.cursorToXY():
+            self.display.cursorStep()
+            if self.display.cursor==oldPos:
+                break #Bad values given
 
     def setTextColour(self, colour):
         #Sets the colour of the foreground text.
         self.display.tCol=sanitiseColour(colour)
 
-    def getPos():
+    def getPos(self):
         return self.display.cursorToXY()
     
     def showCursor(self,on):
@@ -154,7 +155,7 @@ class Turtle(object):
         self.surface=surface
         self.angle=0
         self.x,self.y=self.surface.get_rect().center
-        self.res=10.0
+        self.res=1.0
         self.penDown=True
         self.colour=(255,255,255,255)
         self.penSize=1
@@ -175,11 +176,15 @@ class Turtle(object):
         
     def forward(self,d):
         #pg.draw.circle(self.surface,(0,255,0,255),(int(self.x),int(self.y)),4)
+        print "==========="
         for i in range(int(d*self.res)):
             ox=self.x
             oy=self.y
-            self.x=self.x+math.sin(math.radians(self.angle))*(d/self.res)
-            self.y=self.y-math.cos(math.radians(self.angle))*(d/self.res)
+            dx=math.sin(math.radians(self.angle))*(1/self.res)
+            dy=math.cos(math.radians(self.angle))*(1/self.res)
+            self.x=self.x+dx
+            self.y=self.y-dy
+            print dx,dy
             if self.penDown:                
                 pg.draw.line(self.surface, self.colour, (ox,oy),(self.x,self.y),self.penSize)
                 if self.sleep>0: time.sleep(self.sleep)
