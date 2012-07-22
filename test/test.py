@@ -16,8 +16,12 @@ t.setSpeed(9)
 t.setPenSize(1)
 a.write("How many corners?\nEnter an int: ")
 n= a.nextInt()
-
+xx,yy=10,10
 for i in range(n):
+    a.setPosition(xx,yy)
+    xx+=4
+    yy+=4
+    
     a.setTextColour((randint(128,255),randint(128,255),randint(128,255)))
     a.write("That's number %d\n"%(i+1))
     t.forward(10)
