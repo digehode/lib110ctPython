@@ -9,10 +9,15 @@ import pygame as pg
 __author__ = 'James Shuttleworth <csx239@coventry.ac.uk>'
 
 
+#To discuss with Mike
+# setPos vs setPosition
+# showHide vs setVisible
+
+
 #TODO: send kill event back to somewhere useful to be handled in user code
 
-bgcol=(10,8,20)
-fgcol=(255,255,255)
+# bgcol=(10,8,20)
+# fgcol=(255,255,255)
 black=(0,0,0)
 green=(0,100,0)
 makeEnd=False
@@ -24,7 +29,7 @@ def sanitiseString(s, validChars):
     return "".join([x if x in validChars else "0" for x in s.strip()])
 
 def sanitiseColour(colour):
-    if (not len(colour) in [3,4] ) or type(colour)!=type((1,2,3)):
+    if (not len(colour) in [3,4] ) or (not type(colour) in [type((1,2,3)), type([1,2,3])]) :
         raise TypeError("Colour must be a tuple of 3 or 4 integers (0-255) corresponding to R, G, B and (possibly) Alpha")
     if len(colour)==3:
         colour+=(255,)
@@ -155,7 +160,7 @@ class Turtle(object):
         self.surface=surface
         self.angle=0
         self.x,self.y=self.surface.get_rect().center
-        self.res=1.0
+        self.res=8.0
         self.penDown=True
         self.colour=(255,255,255,255)
         self.penSize=1
@@ -176,7 +181,7 @@ class Turtle(object):
         
     def forward(self,d):
         #pg.draw.circle(self.surface,(0,255,0,255),(int(self.x),int(self.y)),4)
-        print "==========="
+
         for i in range(int(d*self.res)):
             ox=self.x
             oy=self.y
@@ -184,7 +189,7 @@ class Turtle(object):
             dy=math.cos(math.radians(self.angle))*(1/self.res)
             self.x=self.x+dx
             self.y=self.y-dy
-            print dx,dy
+
             if self.penDown:                
                 pg.draw.line(self.surface, self.colour, (ox,oy),(self.x,self.y),self.penSize)
                 if self.sleep>0: time.sleep(self.sleep)
@@ -211,7 +216,7 @@ class DisplayThread(threading.Thread):
         self.tCol=(255,255,255,255)
         self.textBuffer=None
         self.clear()
-                
+        self.bgCol=(10,8,20)
         self.pitch=pitch
         pg.init()
         self.screen = pg.display.set_mode(self.screen_size)
@@ -219,7 +224,7 @@ class DisplayThread(threading.Thread):
         self.clock = pg.time.Clock()
         self.font1 = pg.font.Font(None, pitch)
 
-        text = self.font1.render("H", 1, fgcol)
+        text = self.font1.render("H", 1, self.tCol)
         self.charRect = text.get_rect()
         self.makeEnd=False
         #self.chars=[]
@@ -369,7 +374,7 @@ class DisplayThread(threading.Thread):
 
                                 
             self.drawCursor()
-            self.screen.fill(bgcol)
+            self.screen.fill(self.bgCol)
             if self.showTurtle:
                 self.screen.blit(self.turtle.surface,(0,0))
                 pointlist=[]
