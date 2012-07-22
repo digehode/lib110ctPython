@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+import sys
+sys.path.append("../src/")
+
+
 import Py110
 from random import randint
 
