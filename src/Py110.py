@@ -160,6 +160,8 @@ class Turtle(object):
         self.surface=surface
         self.angle=0
         self.x,self.y=self.surface.get_rect().center
+        self.x=float(self.x)
+        self.y=float(self.y)
         self.res=8.0
         self.penDown=True
         self.colour=(255,255,255,255)
@@ -167,6 +169,18 @@ class Turtle(object):
         self.sleep=0
         self.setSpeed(8)
         self.showTurtle=True
+        self.showIcon=True
+        self.stack=[]
+    def push(self):
+        self.stack.append((self.x,self.y,self.angle))
+    def pop(self):
+        if len(self.stack)==0:
+            return
+        self.x,self.y,self.angle=self.stack[-1]
+        self.stack=self.stack[:-1]
+    
+    def hideIcon(self,hide):
+        self.showIcon=not hide
     def clear(self):
         self.surface.fill((0,0,0,0)) #Fill with transparency
         self.__init__(self.surface) #re-call the constructor
@@ -181,28 +195,33 @@ class Turtle(object):
         
     def forward(self,d):
         #pg.draw.circle(self.surface,(0,255,0,255),(int(self.x),int(self.y)),4)
-
+        #TODO: split line drawing and steppy turtle moving?
         for i in range(int(d*self.res)):
             ox=self.x
             oy=self.y
-            dx=math.sin(math.radians(self.angle))*(1/self.res)
-            dy=math.cos(math.radians(self.angle))*(1/self.res)
+            dx=math.sin(math.radians(self.angle))*(1.0/self.res)
+            dy=math.cos(math.radians(self.angle))*(1.0/self.res)
             self.x=self.x+dx
             self.y=self.y-dy
 
             if self.penDown:                
                 pg.draw.line(self.surface, self.colour, (ox,oy),(self.x,self.y),self.penSize)
                 if self.sleep>0: time.sleep(self.sleep)
+
     def left(self,a):
         self.angle-=a
+
     def right(self,a):
         self.angle+=a
+
     def getPos(self):
         #Get the location (pixels) of the turtle        
         return (self.x,self.y)
+
     def setPos(self,pos):
         self.x=pos[0]
         self.y=pos[1]
+        
     def setColour(self,colour):
         self.colour=sanitiseColour(colour)
     def setPenSize(self,s):
@@ -375,26 +394,28 @@ class DisplayThread(threading.Thread):
                                 
             self.drawCursor()
             self.screen.fill(self.bgCol)
+            #TODO: Move all this drawing into the turtle by passing in/out another buffer for the icon
             if self.showTurtle:
                 self.screen.blit(self.turtle.surface,(0,0))
-                pointlist=[]
-                for i in range(len(self.turtleIcon)):
-                    p1=self.turtleIcon[i]
-                    #rotate point
-                    p1=(p1[0]*math.cos(math.radians(self.turtle.angle))-p1[1]*math.sin(math.radians(self.turtle.angle)),
-                        p1[0]*math.sin(math.radians(self.turtle.angle))+p1[1]*math.cos(math.radians(self.turtle.angle)))
-                    #scale point
-                    p1=(p1[0]*self.turtleIconScale,
-                        p1[1]*self.turtleIconScale)
-                    #Move point
-                    p1=(p1[0]+self.turtle.x,
-                        p1[1]+self.turtle.y)
-                    pointlist.append(p1)
+                if self.turtle.showIcon:
+                    pointlist=[]
+                    for i in range(len(self.turtleIcon)):
+                        p1=self.turtleIcon[i]
+                        #rotate point
+                        p1=(p1[0]*math.cos(math.radians(self.turtle.angle))-p1[1]*math.sin(math.radians(self.turtle.angle)),
+                            p1[0]*math.sin(math.radians(self.turtle.angle))+p1[1]*math.cos(math.radians(self.turtle.angle)))
+                        #scale point
+                        p1=(p1[0]*self.turtleIconScale,
+                            p1[1]*self.turtleIconScale)
+                        #Move point
+                        p1=(p1[0]+self.turtle.x,
+                            p1[1]+self.turtle.y)
+                        pointlist.append(p1)
 
-                #Draw black body
-                pg.draw.polygon(self.screen,black,pointlist)
-                #Use current colour to draw outline
-                pg.draw.polygon(self.screen,self.turtle.colour,pointlist,1)
+                    #Draw black body
+                    pg.draw.polygon(self.screen,black,pointlist)
+                    #Use current colour to draw outline
+                    pg.draw.polygon(self.screen,self.turtle.colour,pointlist,1)
 
 
             self.screen.blit(self.textBuffer,(0,0))
