@@ -13,13 +13,14 @@ random.seed(1)
 a.showCursor(True)
 t=a.getTurtle()
 t.setSpeed(9)
-t.setPenSize(2)
+t.setPenSize(1)
 
 
 col=[255,255,255]
 
 
 def kochLine(l,minL):
+    l=float(l)
     for i in range(3):
         col[i]+=randint(-10,10)
         if col[i]>255: col[i]=255
@@ -38,11 +39,11 @@ def kochLine(l,minL):
         kochLine(l/3,minL)
 
 
-t.setPos((800,500))
+t.setPos((800,550))
 t.left(90)
 
-l=500        
-ml=10
+l=600        
+ml=1
 
 for i in range(3):
     kochLine(l,ml)

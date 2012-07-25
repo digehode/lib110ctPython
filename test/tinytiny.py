@@ -12,7 +12,7 @@ a=Py110.Py110(640,480,16)
 random.seed(1)
 a.showCursor(True)
 t=a.getTurtle()
-t.setSpeed(1)
+t.setSpeed(9)
 t.setPenSize(1)
 
 

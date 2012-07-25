@@ -190,23 +190,48 @@ class Turtle(object):
         if s>10: s=10
         #Invert to use for delay
         s=10-s
-        #Re-range between 0 and 0.001
-        self.sleep=0.0001*s
+        #Re-range between 0 and 0.01
+        self.sleep=0.001*s
         
     def forward(self,d):
-        #pg.draw.circle(self.surface,(0,255,0,255),(int(self.x),int(self.y)),4)
-        #TODO: split line drawing and steppy turtle moving?
-        for i in range(int(d*self.res)):
+
+        #This is all a bit more hacky than it was originally, but it
+        #copes with small lines (even <1px) and accurately
+        
+        d=float(d)
+        sx=float(self.x)
+        sy=float(self.y)
+        ex=sx+math.sin(math.radians(self.angle))*d
+        ey=sy-math.cos(math.radians(self.angle))*d
+        xd=ex-sx
+        yd=ey-sy
+        s=(xd**2+yd**2)**0.5
+        unitx=xd/s
+        unity=yd/s
+
+        i=0
+        ox=sx
+        oy=sy
+        
+        while i+1<=d:
             ox=self.x
             oy=self.y
-            dx=math.sin(math.radians(self.angle))*(1.0/self.res)
-            dy=math.cos(math.radians(self.angle))*(1.0/self.res)
-            self.x=self.x+dx
-            self.y=self.y-dy
-
+            self.x+=unitx
+            self.y+=unity
+        
             if self.penDown:                
                 pg.draw.line(self.surface, self.colour, (ox,oy),(self.x,self.y),self.penSize)
                 if self.sleep>0: time.sleep(self.sleep)
+            i+=1
+        #In case of bits less than 1 left over (shouldn't happen) or
+        #lines less than 1 to start with.
+        self.x=ex
+        self.y=ey
+        if self.penDown and (self.x-ox!=0 or self.y-oy!=0):                
+            pg.draw.line(self.surface, self.colour, (ox,oy),(self.x,self.y),self.penSize)
+            sleepscale=((self.x-ox)**2+(self.y-oy)**2)**0.5
+            if self.sleep>0: time.sleep(self.sleep*sleepscale)
+        
 
     def left(self,a):
         self.angle-=a
