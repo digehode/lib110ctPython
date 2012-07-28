@@ -49,60 +49,60 @@ class Py110(object):
 
 
     def clear(self) :
-        #Clears all text from the console (retaining background image)
+        """Clears all text from the console (retaining other graphics)"""
         self.display.clear()
         pass
     def clearBack( self, rectangle=None) :
         #TODO:        
-        #Clears a rectangular portion of the background image. Rectangle is a tuple of (x,y,width,height).  If the rectangle is None, clear all of the background.
+        """NOT IMPLEMENTED. Clears a rectangular portion of the background image. Rectangle is a tuple of (x,y,width,height).  If the rectangle is None, clear all of the background."""
         pass
     def clearChar(self) :
-        #Clears the character at the current cursor position
+        """Clears the character at the current cursor position"""
         self.display.clearChar()
     def clearChars(self, nChars) :
-        #Clears a number of characters, starting from the current cursor position
+        """Clears a number of characters, starting from the current cursor position"""
         oldPos=self.display.cursor
         for i in range(nChars):
             self.display.clearChar()
             self.display.cursorStep()
         self.display.cursor=oldPos
         pass
-    def echo(on) :
-        #Controls console behaviour during input
+    def echo(self,on) :
+        """Controls console behaviour during input. When echo is off (False) keys pressed are not displayed on the screen."""
         self.display.echo=on
     def getBuffer(self) :
         #TODO:        
-        #Returns the background image for the console (enables fun with graphics)
-        pass
+        """NOT IMPLEMENTED. Sort of not, anyway. Returns the background image for the console (enables fun with graphics)"""
+        return self.display.screen
     def getTurtle(self) :        
-        #Gets an MSW Logo style 'Turtle' for use in the console window.
+        """Gets an Logo-style 'Turtle' for use in the console window."""
         return self.display.turtle
     
     def getX(self) :
-        #Returns the x coordinate of the current cursor position
+        """Returns the x coordinate of the current cursor position"""
         return self.display.cursorToXY()[0]
 
 
     def getY(self) :
-        #Returns the y coordinate of the current cursor position        
+        """Returns the y coordinate of the current cursor position"""
         return self.display.cursorToXY()[1]
 
 
     def hideTurtle(self) :
-        #Hides the turtle (retains anything the turtle has drawn)
+        """Hides the turtle (retains anything the turtle has drawn even though it will not be visible until showTurtle() is called)"""
         self.display.showTurtle=False
 
     def	next(self) :
-        #Reads a string.
+        """Reads a string from the keyboard"""
         return self.display.grab()
         
 
     def nextChar(self) :
-        #Reads a single character.
+        """Reads a single character."""
         return self.display.grab(1)
 
     def nextDouble(self) :
-        #Reads a double
+        """Reads a double from the keyboard"""
         #strip all non digit, non ./- characters
         #Pretty rubbish, but:
         #1. user input shouldn't crash a program
@@ -115,20 +115,20 @@ class Py110(object):
         
 
     def nextInt(self) :
-        #Reads an integer
+        """Reads an integer from the keyboard"""
         s=sanitiseString(self.next(),"0123456789-").strip()
         if s.find("-")>0 or s.count("-")>1  or s in["-",""]:
             return 0
         return int(s)
 
 
-    def setBackColour(colour) :
-        #Sets the background colour for outputted text.
+    def setBackColour(colour) :        
+        """NOT IMPLEMENTED Sets the background colour for outputted text."""
+        #TODO: ???
         pass
 
     def setPosition(self, x, y) :
-        #TODO:        
-        #Sets the cursor position (in character spaces, not pixels)
+        """Sets the cursor position (in character spaces, not pixels)"""
         #Doing it the lazy way:
         oldPos=self.display.cursor
         while (x,y)!=self.display.cursorToXY():
@@ -137,23 +137,24 @@ class Py110(object):
                 break #Bad values given
 
     def setTextColour(self, colour):
-        #Sets the colour of the foreground text.
+        """Sets the colour of the foreground text."""
         self.display.tCol=sanitiseColour(colour)
 
     def getPos(self):
+        """Returns tuple of current x,y cursor position (in characters, not pixels)"""
         return self.display.cursorToXY()
     
     def showCursor(self,on):
-        #Set the cursor to show or not
+        """Set the cursor to show or not"""
         self.display.showCursor=on
 
     def showTurtle(self) :
-        #Displays the turtle (turtle is displayed by default but this may be necessary following a call to hideTurtle()
+        """Displays the turtle (turtle is displayed by default but this may be necessary following a call to hideTurtle()"""
         self.display.showTurtle=True
 
     def write(self,s) :
-        #Writes a thing to the screen
-        self.display.write(s)
+        """Writes a "thing" to the screen.  Uses the __str__ function of the thing to decide what to display."""
+        self.display.write(str(s))
 
 class Turtle(object):
     def __init__(self,surface):
@@ -172,16 +173,26 @@ class Turtle(object):
         self.showIcon=True
         self.stack=[]
     def push(self):
+        """Push the current position and angle onto a stack to be popped off later.
+        You can use push() to remember a location and then pop() to go back to it later.
+        Doesn't store any other parameters (size, colour, speed)."""
         self.stack.append((self.x,self.y,self.angle))
     def pop(self):
+        """Popc the most recent  position and angle from a stack and place the turtle at those coordinates, at that angle.
+        You can use push() to remember a location and then pop() to go back to it later.
+        Doesn't set any other parameters (size, colour, speed)."""
         if len(self.stack)==0:
             return
         self.x,self.y,self.angle=self.stack[-1]
         self.stack=self.stack[:-1]
     
     def hideIcon(self,hide):
+        """hideIcon(True) hides the visible Turtle - this is not the
+        same as the lines drawn by the Turtle. hideIcon(False) unhides
+        the icon"""
         self.showIcon=not hide
     def clear(self):
+        """Clear the Turtle's trail and reset all parameters"""
         self.surface.fill((0,0,0,0)) #Fill with transparency
         self.__init__(self.surface) #re-call the constructor
     def setSpeed(self,s):
@@ -190,11 +201,11 @@ class Turtle(object):
         if s>10: s=10
         #Invert to use for delay
         s=10-s
-        #Re-range between 0 and 0.01
-        self.sleep=0.001*s
+        #Re-range between 0 and 0.005
+        self.sleep=0.0005*s
         
     def forward(self,d):
-
+        """Move forward by d pixels"""
         #This is all a bit more hacky than it was originally, but it
         #copes with small lines (even <1px) and accurately
         
@@ -234,25 +245,39 @@ class Turtle(object):
         
 
     def left(self,a):
+        """Turn left by the given amount (degrees)."""
         self.angle-=a
 
     def right(self,a):
+        """Turn right by the given amount (degrees)."""
         self.angle+=a
 
     def getPos(self):
+        """Returns the x,y coordinates (in pixels with origin at top left) )of the turtle as a tuple"""
         #Get the location (pixels) of the turtle        
         return (self.x,self.y)
 
     def setPos(self,pos):
+        """Set the position of the turtle to the x and y values given. The parameter should be a tuple."""
         self.x=pos[0]
         self.y=pos[1]
         
     def setColour(self,colour):
+        """Set the colour of the Turtle. Colours are (R,G,B) tuples with each value between 0 and 255 or optionally (R,G,B,A) tuples where A is alpha."""
         self.colour=sanitiseColour(colour)
     def setPenSize(self,s):
+        """Set pen size"""
         if s>=1:
             self.penSize=s
-            
+    def getColour(self):
+        """Return the current pen colour as an RGB or RGBA tuple."""
+        return self.colour
+    def penDown(self):
+        """Put the Turtle's pen down - that is, draw when moving"""
+        self.penDown=True
+    def penUp(self):
+        """Lift the Turtle's pen up - that is, don't draw when moving"""
+        self.penDown=False            
 class DisplayThread(threading.Thread):
     def __init__(self,w,h,pitch):        
         threading.Thread.__init__(self)
@@ -450,7 +475,45 @@ class DisplayThread(threading.Thread):
             pg.display.flip()
 
 
+
+class StopWatch(object):
+    def __init__(self):
+        self.running=False
+        self.startTime=0
+        self.elapsed=0
+    def read(self):
+        """Reads the current time from the watch, without stopping it"""
+        if self.running:
+            now=time.time()
+            self.elapsed+=(now-self.startTime)
+            self.startTime=now
+        return self.elapsed
+    def reset(self):
+        """Resets the time to zero. Does not affect the started/stopped status of the stopwatch."""
+        self.elapsed=0
+        self.startTime=time.time()
+    def start(self):
+        """Starts the watch"""
+        if not self.running:
+            self.startTime=time.time()
+            self.running=True
+        
+    def stop(self):
+        """Stops the watch (does not reset time to zero)"""
+        if self.running:
+            self.elapsed+=time.time()-self.startTime;
+            self.running=False
+        return self.elapsed
+
+
+
+
+        
             
 if __name__=="__main__":
     print """This module isn't meant to be run as a program.
     Instead, launch Python and import the  module. """
+
+    
+
+    

@@ -3,6 +3,8 @@
 import sys
 sys.path.append("../src/")
 
+#Tests forward and backward drawing and line lengths at various angles
+
 
 import Py110
 from random import randint
@@ -18,10 +20,17 @@ t.setPenSize(1)
 
 col=[255,255,255]
 
-t.setPos((a.w/2,a.h*0.9))
+t.setPos((a.w/2,a.h/2))
 
-t.forward(100)
-print t.x,t.y
+
+
+
+for i in range(72):
+
+    t.forward(-100)
+    t.forward(100)
+    t.right(5)
+    
 a.write("Press any key to quit.")
 
 a.showCursor(False)

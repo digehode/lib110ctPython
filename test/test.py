@@ -24,7 +24,7 @@ for i in range(n):
     
     a.setTextColour((randint(128,255),randint(128,255),randint(128,255)))
     a.write("That's number %d\n"%(i+1))
-    t.forward(10)
+    t.forward(80)
     t.right(110)
     
 a.write("Press any key to quit.")
