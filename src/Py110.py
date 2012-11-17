@@ -3,6 +3,7 @@
 
 import threading,time
 import math
+from Queue import Queue
 
 import pygame as pg
 
@@ -41,24 +42,40 @@ class Py110(object):
     def __init__(self,w,h,pitch):
         self.size=self.w,self.h=w,h
         self.pitch=pitch
-        self.display=DisplayThread(w,h,pitch)
+        self.eventQueue=Queue()
+        self.display=DisplayThread(w,h,pitch, self.eventQueue)
         self.display.start()
+
+    def queuePump(self):
+        if self.display.ready:
+            pg.event.pump()            
+            for event in pg.event.get():
+                self.eventQueue.put(event)
+
+
+    def dummy(self):
+        self.queuePump()
+    
     def end(self):
         #Stop other thread and return
+        self.queuePump()
         self.display.end()
 
 
     def clear(self) :
         """Clears all text from the console (retaining other graphics)"""
         self.display.clear()
+        self.queuePump()
         pass
     def clearBack( self, rectangle=None) :
         #TODO:        
         """NOT IMPLEMENTED. Clears a rectangular portion of the background image. Rectangle is a tuple of (x,y,width,height).  If the rectangle is None, clear all of the background."""
         pass
+        self.queuePump()
     def clearChar(self) :
         """Clears the character at the current cursor position"""
         self.display.clearChar()
+        self.queuePump()
     def clearChars(self, nChars) :
         """Clears a number of characters, starting from the current cursor position"""
         oldPos=self.display.cursor
@@ -66,40 +83,51 @@ class Py110(object):
             self.display.clearChar()
             self.display.cursorStep()
         self.display.cursor=oldPos
-        pass
+        self.queuePump()
+        
     def echo(self,on) :
         """Controls console behaviour during input. When echo is off (False) keys pressed are not displayed on the screen."""
         self.display.echo=on
+        self.queuePump()
+
     def getBuffer(self) :
         #TODO:        
         """NOT IMPLEMENTED. Sort of not, anyway. Returns the background image for the console (enables fun with graphics)"""
+        self.queuePump()
         return self.display.screen
+
     def getTurtle(self) :        
         """Gets an Logo-style 'Turtle' for use in the console window."""
+        self.queuePump()
         return self.display.turtle
     
     def getX(self) :
         """Returns the x coordinate of the current cursor position"""
+        self.queuePump()
         return self.display.cursorToXY()[0]
 
 
     def getY(self) :
         """Returns the y coordinate of the current cursor position"""
+        self.queuePump()
         return self.display.cursorToXY()[1]
 
 
     def hideTurtle(self) :
         """Hides the turtle (retains anything the turtle has drawn even though it will not be visible until showTurtle() is called)"""
+        self.queuePump()
         self.display.showTurtle=False
 
     def	next(self) :
         """Reads a string from the keyboard"""
-        return self.display.grab()
+        self.queuePump()
+        return self.display.grab(fn=lambda: self.queuePump())
         
 
     def nextChar(self) :
         """Reads a single character."""
-        return self.display.grab(1)
+        self.queuePump()
+        return self.display.grab(1,fn=lambda: self.queuePump())
 
     def nextDouble(self) :
         """Reads a double from the keyboard"""
@@ -110,6 +138,7 @@ class Py110(object):
         s=sanitiseString(self.next(),"0123456789.-").strip()
         if s.find("-")>0 or s.count("-")>1 or s.count(".")>1 or s in["-","",".","-.",".-"]:
             return 0.0
+        self.queuePump()
         return float(s)
 
         
@@ -118,13 +147,16 @@ class Py110(object):
         """Reads an integer from the keyboard"""
         s=sanitiseString(self.next(),"0123456789-").strip()
         if s.find("-")>0 or s.count("-")>1  or s in["-",""]:
+            self.queuePump()
             return 0
+        self.queuePump()
         return int(s)
 
 
-    def setBackColour(colour) :        
+    def setBackColour(self,colour) :        
         """NOT IMPLEMENTED Sets the background colour for outputted text."""
         #TODO: ???
+        self.queuePump()
         pass
 
     def setPosition(self, x, y) :
@@ -135,27 +167,30 @@ class Py110(object):
             self.display.cursorStep()
             if self.display.cursor==oldPos:
                 break #Bad values given
-
+        self.queuePump()
     def setTextColour(self, colour):
         """Sets the colour of the foreground text."""
         self.display.tCol=sanitiseColour(colour)
-
+        self.queuePump()
     def getPos(self):
         """Returns tuple of current x,y cursor position (in characters, not pixels)"""
+        self.queuePump()
         return self.display.cursorToXY()
     
     def showCursor(self,on):
         """Set the cursor to show or not"""
+        self.queuePump()
         self.display.showCursor=on
 
     def showTurtle(self) :
         """Displays the turtle (turtle is displayed by default but this may be necessary following a call to hideTurtle()"""
         self.display.showTurtle=True
-
+        self.queuePump()
     def write(self,s) :
         """Writes a "thing" to the screen.  Uses the __str__ function of the thing to decide what to display."""
         self.display.write(str(s))
-
+        self.queuePump()
+        
 class Turtle(object):
     def __init__(self,surface):
         self.surface=surface
@@ -279,8 +314,10 @@ class Turtle(object):
         """Lift the Turtle's pen up - that is, don't draw when moving"""
         self.penDown=False            
 class DisplayThread(threading.Thread):
-    def __init__(self,w,h,pitch):        
+    def __init__(self,w,h,pitch, eventQueue):        
         threading.Thread.__init__(self)
+        self.ready=False
+        self.eventQueue=eventQueue
         self.screen_size = w,h
         self.tCol=(255,255,255,255)
         self.textBuffer=None
@@ -317,14 +354,16 @@ class DisplayThread(threading.Thread):
         self.turtle=Turtle(pg.Surface(self.screen_size,flags=pg.SRCALPHA,depth=32))
         self.turtleIcon=[(-0.5,0.5),(0.0,-0.5),(0.5,0.5)]
         self.turtleIconScale=10
-
-    def grab(self,n=0):
+        self.ready=True
+    def grab(self,n=0,fn=None):
         self.captureBuffer=""
         self.captureState=True
 
         
         while (n==0 and self.captureState) or (n>0 and len(self.captureBuffer)!=n):
             time.sleep(0.0001)
+            if fn!=None:
+                fn()
 
 
         self.captureState=False
@@ -410,12 +449,15 @@ class DisplayThread(threading.Thread):
         while True:
             #screen.fill(bgcol)
             if self.makeEnd:
+                self.ready=False
                 pg.quit()
                 return
 
 
-            pg.event.pump()            
-            for event in pg.event.get():
+            # pg.event.pump()            
+            # for event in pg.event.get():
+            while not self.eventQueue.empty():
+                event=self.eventQueue.get()
                 if event.type == pg.QUIT:
                     pg.quit()
                     return
@@ -517,3 +559,5 @@ if __name__=="__main__":
     
 
     
+
+#  LocalWords:  DisplayThread eventQueue
