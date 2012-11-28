@@ -8,7 +8,8 @@ from Queue import Queue
 import pygame as pg
 
 __author__ = 'James Shuttleworth <csx239@coventry.ac.uk>'
-
+cVersion="0.5"
+cDate="[2012-11-28 Wed]"
 
 #To discuss with Mike
 # setPos vs setPosition
@@ -45,7 +46,7 @@ class Py110(object):
         self.eventQueue=Queue()
         self.display=DisplayThread(w,h,pitch, self.eventQueue)
         self.display.start()
-
+        print "Py110 version %s (%s)"%(cVersion, cDate)
     def queuePump(self):
         if self.display.ready:
             pg.event.pump()            
@@ -122,7 +123,7 @@ class Py110(object):
     def	next(self) :
         """Reads a string from the keyboard"""
         self.queuePump()
-        return self.display.grab(fn=lambda: self.queuePump())
+        return self.display.grab(fn=lambda: self.queuePump()).strip()
         
 
     def nextChar(self) :
@@ -308,10 +309,10 @@ class Turtle(object):
     def getColour(self):
         """Return the current pen colour as an RGB or RGBA tuple."""
         return self.colour
-    def penDown(self):
+    def lowerPen(self):
         """Put the Turtle's pen down - that is, draw when moving"""
         self.penDown=True
-    def penUp(self):
+    def raisePen(self):
         """Lift the Turtle's pen up - that is, don't draw when moving"""
         self.penDown=False            
 class DisplayThread(threading.Thread):
@@ -331,7 +332,7 @@ class DisplayThread(threading.Thread):
         self.clock = pg.time.Clock()
         self.font1 = pg.font.Font(None, pitch)
 
-        text = self.font1.render("H", 1, self.tCol)
+        text = self.font1.render("W", 1, self.tCol)
         self.charRect = text.get_rect()
         self.makeEnd=False
         #self.chars=[]
@@ -475,7 +476,7 @@ class DisplayThread(threading.Thread):
                         if self.captureState:
                             self.captureBuffer+=str(event.unicode)
                         if self.echo:
-                            self.putC(str(event.unicode))
+                            self.write(str(event.unicode))
                     elif event.key==pg.K_RETURN:
                         self.captureBuffer+="\n"
                         self.captureState=False
