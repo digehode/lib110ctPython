@@ -62,6 +62,7 @@ class Py110(object):
         self.display.end()
 
 
+
     def clear(self) :
         """Clears all text from the console (retaining other graphics)"""
         self.display.clear()
@@ -356,19 +357,26 @@ class DisplayThread(threading.Thread):
         self.turtleIconScale=10
         self.ready=True
     def grab(self,n=0,fn=None):
-        self.captureBuffer=""
-        self.captureState=True
-
-        
-        while (n==0 and self.captureState) or (n>0 and len(self.captureBuffer)!=n):
-            time.sleep(0.0001)
-            if fn!=None:
+	self.captureBuffer=""
+	self.captureState=True
+	while (n==0 and self.captureState) or (n>0 and len(self.captureBuffer)!=n):
+	    time.sleep(0.01)
+	    if fn!=None:
                 fn()
+	self.captureState=False
+        #Weirdness: without the sleep, the carriage return at the end
+        #of the user input is not converted to a visual linefeed and
+        #text that follows (on the same line) is spaced weirdly -
+        #spread out
 
+        #It goes away if you just print the characters to stdout, too, but this is slightly better
 
-        self.captureState=False
-        return self.captureBuffer
-        
+        #Assuming some kind of race-condition that this plaster will
+        #cover until it comes back to kill me
+	time.sleep(0.1)
+
+	return self.captureBuffer
+		
     def drawCursor(self, clear=False):
 
         x,y=self.cursorToXY()
@@ -416,7 +424,8 @@ class DisplayThread(threading.Thread):
         while self.cursorToXY()[1]==y:
             self.cursorStep()
     def putC(self,c):
-        
+        #print "...[%s]%d"%(c,ord(c))
+		
         if len(c)!=1 or type(c)!=type(""):
             raise TypeError("putC can only write a char (str of length 1), not a %s of length %d"%(str(type(c)),len(c)))
         if c=="\n":
