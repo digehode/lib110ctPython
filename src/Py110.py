@@ -8,7 +8,9 @@ from Queue import Queue
 import pygame as pg
 
 __author__ = 'James Shuttleworth <csx239@coventry.ac.uk>'
-cVersion="0.5"
+__version__="0.5"
+
+cVersion=__version__
 cDate="[2012-11-28 Wed]"
 
 #To discuss with Mike
@@ -245,6 +247,7 @@ class Turtle(object):
         """Move forward by d pixels"""
         #This is all a bit more hacky than it was originally, but it
         #copes with small lines (even <1px) and accurately
+        if d==0: return
         
         d=float(d)
         sx=float(self.x)
@@ -294,6 +297,10 @@ class Turtle(object):
         #Get the location (pixels) of the turtle        
         return (self.x,self.y)
 
+    def setPosition(self,pos):
+        self.setPos(pos)
+    
+    
     def setPos(self,pos):
         """Set the position of the turtle to the x and y values given. The parameter should be a tuple."""
         self.x=pos[0]
