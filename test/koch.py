@@ -15,6 +15,7 @@ t=a.getTurtle()
 t.setSpeed(9)
 t.setPenSize(1)
 
+a.setBackgroundImage("./nova.png")
 
 col=[255,255,255]
 

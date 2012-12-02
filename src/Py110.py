@@ -26,6 +26,19 @@ black=(0,0,0)
 green=(0,100,0)
 makeEnd=False
 
+def loadImg(filename):
+	try:
+		image = pg.image.load(filename)
+		if image.get_alpha() is None:
+			image = image.convert()
+		else:
+			image = image.convert_alpha()
+	except pg.error, message:
+        	print 'Cannot load image:', filename
+        	raise SystemExit, message
+	return image
+
+
 def sanitiseString(s, validChars):
     #The following line is probably bad for your health and it's not
     #even that great - always replaces with "0" and doesn't do
@@ -49,13 +62,23 @@ class Py110(object):
         self.display=DisplayThread(w,h,pitch, self.eventQueue)
         self.display.start()
         print "Py110 version %s (%s)"%(cVersion, cDate)
+        
+
+        
+    def setBackgroundImage(self,filename):
+        """ Set the background image drawn begins everything else """
+        self.display.bg=loadImg(filename)
+    def clearBackgroundImage(self):
+        """ Clear the background image """
+        self.display.bg=None
+        
     def queuePump(self):
         if self.display.ready:
             pg.event.pump()            
             for event in pg.event.get():
                 self.eventQueue.put(event)
 
-
+    
     def dummy(self):
         self.queuePump()
     
@@ -364,6 +387,9 @@ class DisplayThread(threading.Thread):
         self.turtleIcon=[(-0.5,0.5),(0.0,-0.5),(0.5,0.5)]
         self.turtleIconScale=10
         self.ready=True
+        self.bg=None
+    
+
     def grab(self,n=0,fn=None):
 	self.captureBuffer=""
 	self.captureState=True
@@ -464,7 +490,7 @@ class DisplayThread(threading.Thread):
     def run(self):
 
         while True:
-            #screen.fill(bgcol)
+
             if self.makeEnd:
                 self.ready=False
                 pg.quit()
@@ -503,6 +529,10 @@ class DisplayThread(threading.Thread):
                                 
             self.drawCursor()
             self.screen.fill(self.bgCol)
+            if self.bg!=None:
+
+                self.screen.blit(self.bg,(0,0))
+
             #TODO: Move all this drawing into the turtle by passing in/out another buffer for the icon
             if self.showTurtle:
                 self.screen.blit(self.turtle.surface,(0,0))
