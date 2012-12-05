@@ -8,10 +8,10 @@ from Queue import Queue
 import pygame as pg
 
 __author__ = 'James Shuttleworth <csx239@coventry.ac.uk>'
-__version__="0.5"
+__version__="0.7"
 
 cVersion=__version__
-cDate="[2012-11-28 Wed]"
+cDate="2012-12-05"
 
 #To discuss with Mike
 # setPos vs setPosition
@@ -213,11 +213,27 @@ class Py110(object):
         """Displays the turtle (turtle is displayed by default but this may be necessary following a call to hideTurtle()"""
         self.display.showTurtle=True
         self.queuePump()
+
     def write(self,s) :
-        """Writes a "thing" to the screen.  Uses the __str__ function of the thing to decide what to display."""
+        """Writes a "thing" to the screen.  Uses the __str__ function of the thing to decide what to display.  See also: writeN()"""
         self.display.write(str(s))
         self.queuePump()
+
+    def writeN(self,s="") :
+        """Writes a "thing" to the screen, followed by a newline.  Uses the __str__ function of the thing to decide what to display. See also write()"""
         
+        self.display.write(str(s)+"\n")
+        self.queuePump()
+
+    def setFont(self,fontName,pitch):
+        """ Set the font used for display. Can be a TTF filename
+        (including path if not in current directory) or None for reset
+        to system default. You don't *have* to clear the text on
+        screen first, but if the font is a different size, it might
+        not look good if you don't. """
+        self.display.setFont(fontName,pitch)
+        
+
 class Turtle(object):
     def __init__(self,surface):
         self.surface=surface
@@ -345,6 +361,7 @@ class Turtle(object):
     def raisePen(self):
         """Lift the Turtle's pen up - that is, don't draw when moving"""
         self.penDown=False            
+
 class DisplayThread(threading.Thread):
     def __init__(self,w,h,pitch, eventQueue):        
         threading.Thread.__init__(self)
@@ -360,10 +377,7 @@ class DisplayThread(threading.Thread):
         self.screen = pg.display.set_mode(self.screen_size)
         pg.display.set_caption("Py110")
         self.clock = pg.time.Clock()
-        self.font1 = pg.font.Font(None, pitch)
-
-        text = self.font1.render("W", 1, self.tCol)
-        self.charRect = text.get_rect()
+        self.setFont(None, pitch)
         self.makeEnd=False
         #self.chars=[]
 
@@ -389,6 +403,12 @@ class DisplayThread(threading.Thread):
         self.ready=True
         self.bg=None
     
+    def setFont(self,fontName,pitch):
+        self.font1 = pg.font.Font(fontName, pitch)
+        text = self.font1.render("W", 1, self.tCol)
+        self.charRect = text.get_rect()
+
+            
 
     def grab(self,n=0,fn=None):
 	self.captureBuffer=""
